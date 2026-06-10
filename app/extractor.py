@@ -1,32 +1,28 @@
-import google.generativeai as genai
 import instructor
+from google import genai
 from app.config import settings
 from app.errors import LLMOrchestrationError
 from app.logger import logger
 from app.schemas import ExtractedInvoice
 
-# Configure the underlying Google Gemini SDK with your secure API key
-genai.configure(api_key=settings.GEMINI_API_KEY)
-
 
 def extract_structured_data(document_text: str) -> ExtractedInvoice:
-    """Sends raw document text to the Gemini AI platform and forces it to
+    """Sends raw document text to the Gemini AI platform using the modern genai SDK
 
-    return a perfectly structured, validated ExtractedInvoice data object.
+    and forces it to return a validated ExtractedInvoice data object.
     """
     logger.info("Initiating structured data extraction with Gemini platform...")
 
     try:
-        # Wrap the standard Gemini client with instructor to enable Pydantic forcing
-        client = instructor.from_gemini(
-            client=genai.GenerativeModel(
-                model_name="gemini-1.5-flash",
-            ),
-            mode=instructor.Mode.GEMINI_JSON,
-        )
+        # Initialize the modern, official Google GenAI Client natively with your settings key
+        genai_client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-        # Execute the request to the AI provider
-        response = client.messages.create(
+        # Wrap it with instructor using the modern from_genai routing engine
+        client = instructor.from_genai(genai_client, mode=instructor.Mode.GENAI_TOOLS)
+
+        # Execute the structured extraction request
+        response = client.chat.completions.create(
+            model="gemini-1.5-flash",
             messages=[
                 {
                     "role": "user",
@@ -42,7 +38,6 @@ def extract_structured_data(document_text: str) -> ExtractedInvoice:
         return response
 
     except Exception as raw_error:
-        # Wrap any unexpected AI failure into our custom domain error tracker
         logger.error(f"LLM Orchestration failure encountered: {str(raw_error)}")
         raise LLMOrchestrationError(
             message="The AI engine failed to analyze and extract data from the document text.",
