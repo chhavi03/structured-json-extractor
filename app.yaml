@@ -1,0 +1,29 @@
+runtime: custom
+env: flex
+
+service: default
+
+# Allocate production machine resources
+resources:
+  cpu: 1
+  memory_gb: 2.0
+  disk_size_gb: 10
+
+# Forward port 8501 to match Streamlit default port
+network:
+  forwarded_ports:
+    - 8501
+
+# Setup environment variables securely (or let Secrets Manager handle it)
+env_variables:
+  # Do not store production credentials directly in git.
+  # Map or set GOOGLE_API_KEY inside Google Cloud Secrets/App Engine flex settings.
+  GOOGLE_API_KEY: "PLACEHOLDER_SET_IN_GCP_CONSOLE"
+  APP_ENV: "production"
+  DATABASE_URL: "sqlite:////tmp/database.db"
+
+# Scaling configuration to control costs
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 2
+  target_cpu_utilization: 0.65

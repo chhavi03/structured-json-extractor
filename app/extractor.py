@@ -1,5 +1,5 @@
 import instructor
-from google import genai
+import google.generativeai as genai
 from app.config import settings
 from app.errors import LLMOrchestrationError
 from app.logger import logger
@@ -7,22 +7,25 @@ from app.schemas import ExtractedInvoice
 
 
 def extract_structured_data(document_text: str) -> ExtractedInvoice:
-    """Sends raw document text to the Gemini AI platform using the modern genai SDK
-
-    and forces it to return a validated ExtractedInvoice data object.
+    """Sends raw document text to the Gemini AI platform using the legacy google-generativeai SDK
+    wrapped by instructor and forces it to return a validated ExtractedInvoice data object.
     """
     logger.info("Initiating structured data extraction with Gemini platform...")
 
     try:
-        # Initialize the modern, official Google GenAI Client natively with your settings key
-        genai_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        # Configure the legacy google-generativeai SDK with the Google API Key
+        genai.configure(api_key=settings.GOOGLE_API_KEY)
 
-        # Wrap it with instructor using the modern from_genai routing engine
-        client = instructor.from_genai(genai_client, mode=instructor.Mode.GENAI_TOOLS)
+        # Wrap it with instructor using from_gemini mapping to the specific model and Mode.GEMINI_JSON
+        client = instructor.from_gemini(
+            client=genai.GenerativeModel(
+                model_name="models/gemini-flash-latest"
+            ),
+            mode=instructor.Mode.GEMINI_JSON,
+        )
 
-        # Execute the structured extraction request
+        # Execute the structured extraction request using chat.completions.create
         response = client.chat.completions.create(
-            model="gemini-1.5-flash",
             messages=[
                 {
                     "role": "user",

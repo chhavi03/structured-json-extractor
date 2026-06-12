@@ -25,11 +25,11 @@ def save_invoice_extraction(
         # Map our incoming data fields onto the SQLAlchemy Database Model columns
         db_record = InvoiceRecord(
             vendor_name=extraction_data.vendor_name,
-            invoice_number=extraction_data.invoice_number,
-            invoice_date=extraction_data.invoice_date,
+            invoice_number=extraction_data.invoice_number or "UNKNOWN",
+            invoice_date=extraction_data.invoice_date or "UNKNOWN",
             subtotal=extraction_data.subtotal,
-            tax=extraction_data.tax,
-            total_amount=extraction_data.total_amount,
+            tax=extraction_data.tax_amount if extraction_data.tax_amount is not None else 0.0,
+            total_amount=extraction_data.grand_total,
             line_items_json=serialized_line_items,
             raw_source_text=raw_text,
         )

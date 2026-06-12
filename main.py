@@ -6,6 +6,10 @@ from app.processor import extract_text_from_pdf
 from app.extractor import extract_structured_data
 from app.crud import save_invoice_extraction
 from app.logger import logger
+from app.init_db import initialize_database
+
+# Automatically initialize physical database schema on launch
+initialize_database()
 
 # Set up page configurations for a clean enterprise feel
 pd_stream.set_page_config(
@@ -99,7 +103,7 @@ with right_results_panel:
         
         financial_col1, financial_col2 = pd_stream.columns(2)
         financial_col1.metric(label="Subtotal Amount", value=f"${results.subtotal:,.2f}")
-        financial_col2.metric(label="Total Amount Due", value=f"${results.total_amount:,.2f}")
+        financial_col2.metric(label="Total Amount Due", value=f"${results.grand_total:,.2f}")
         
         # Render the full Pydantic JSON structure raw on the dashboard screen
         pd_stream.subheader("Raw Structural JSON Breakdown")

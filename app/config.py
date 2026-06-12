@@ -11,12 +11,14 @@ class Settings(BaseSettings):
     """
 
     # LLM API Keys
+    GOOGLE_API_KEY: str = Field(default="")
+    GEMINI_API_KEY: str = Field(default="")
     OPENAI_API_KEY: str = Field(default="mock-key-for-testing")
     ANTHROPIC_API_KEY: str = Field(default="mock-key-for-testing")
 
     # Application Settings
     APP_ENV: str = Field(default="development")
-    DATABASE_URL: str = Field(default="sqlite:///./extraction_logs.db")
+    DATABASE_URL: str = Field(default="sqlite:///database.db")
 
     # Target the parent directory's .env file
     model_config = SettingsConfigDict(
@@ -26,6 +28,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    def model_post_init(self, __context):
+        # Fallback to GEMINI_API_KEY if GOOGLE_API_KEY is not explicitly set in environment or env file
+        if not self.GOOGLE_API_KEY and self.GEMINI_API_KEY:
+            self.GOOGLE_API_KEY = self.GEMINI_API_KEY
 
 
 settings = Settings()
